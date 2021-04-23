@@ -1,11 +1,14 @@
 // import { useEffect } from "react";
+import { useContext } from "react";
 import { GetStaticProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import enUS from "date-fns/locale/en-US";
+
 import { api } from "../services/api";
 import { convertDurationToTimeString } from "../utils/convertDurationToTimeString";
+import { PlayerContext } from "../contexts/playerContext";
 
 import styles from "./home.module.scss";
 
@@ -32,6 +35,8 @@ export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
   //     .then((response) => response.json())
   //     .then((data) => console.log(data));
   // }, []);
+
+  const { play } = useContext(PlayerContext);
 
   return (
     <div className={styles.homepage}>
@@ -68,7 +73,7 @@ export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
                   <span>{episode.durationAsString}</span>
                 </div>
 
-                <button type="button">
+                <button type="button" onClick={() => play(episode)}>
                   <img src="/play-green.svg" alt="Play episode" />
                 </button>
               </li>

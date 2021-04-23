@@ -1,7 +1,7 @@
 import { GetStaticPaths, GetStaticProps } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import { api } from "../../services/api";
 import { format, parseISO } from "date-fns";
 import enUS from "date-fns/locale/en-US";
@@ -26,6 +26,13 @@ type EpisodeProps = {
 };
 
 export default function Episode({ episode }: EpisodeProps) {
+  // const router = useRouter();
+
+  // When using fallback: true in getStaticPaths
+  // if (router.isFallback) {
+  //   return <p>Loading...</p>;
+  // }
+
   return (
     <div className={styles.episode}>
       <div className={styles.thumbnailContainer}>
@@ -64,8 +71,30 @@ export default function Episode({ episode }: EpisodeProps) {
 // e.g. there is no single page for "episode"
 // each episode has something unique that makes it dynamic
 export const getStaticPaths: GetStaticPaths = async () => {
+  const { data } = await api.get("episodes", {
+    params: {
+      _limit: 2,
+      _sort: "published_at",
+      _order: "desc",
+    },
+  });
+
+  const paths = data.map((episode: Episode) => {
+    return {
+      params: {
+        slug: episode.id,
+      },
+    };
+  });
+
   return {
-    paths: [],
+    // NextJS generates a static page for each path during "yarn build"
+    paths: paths,
+    // What NextJS does if there is no static page generated
+    // fallback: false -> returns 404
+    // incremental static regeneration:
+    // fallback: true -> creates static page making requests on client-side
+    // fallback: 'blocking' -> creates static page making requests on server-side
     fallback: "blocking",
   };
 };
