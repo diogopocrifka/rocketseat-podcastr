@@ -1,6 +1,6 @@
 // import { useEffect } from "react";
-import { useContext } from "react";
 import { GetStaticProps } from "next";
+import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
@@ -8,7 +8,7 @@ import enUS from "date-fns/locale/en-US";
 
 import { api } from "../services/api";
 import { convertDurationToTimeString } from "../utils/convertDurationToTimeString";
-import { PlayerContext } from "../contexts/playerContext";
+import { usePlayer } from "../contexts/playerContext";
 
 import styles from "./home.module.scss";
 
@@ -24,11 +24,11 @@ type Episode = {
 };
 
 type HomeProps = {
-  lastestEpisodes: Episode[];
+  latestEpisodes: Episode[];
   allEpisodes: Episode[];
 };
 
-export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
+export default function Home({ latestEpisodes, allEpisodes }: HomeProps) {
   // SPA - Single-page Application (Works on ReactJS and NextJS)
   // useEffect(() => {
   //   fetch("http://localhost:3333/episodes")
@@ -36,15 +36,21 @@ export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
   //     .then((data) => console.log(data));
   // }, []);
 
-  const { play } = useContext(PlayerContext);
+  const { playList } = usePlayer();
+
+  const episodeList = [...latestEpisodes, ...allEpisodes];
 
   return (
     <div className={styles.homepage}>
+      <Head>
+        <title>Home | Podcastr</title>
+      </Head>
+
       <section className={styles.latestEpisodes}>
-        <h2>Lastest Episodes</h2>
+        <h2>Latest Episodes</h2>
 
         <ul>
-          {lastestEpisodes.map((episode) => {
+          {latestEpisodes.map((episode, index) => {
             return (
               <li key={episode.id}>
                 {/* 
@@ -73,7 +79,10 @@ export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
                   <span>{episode.durationAsString}</span>
                 </div>
 
-                <button type="button" onClick={() => play(episode)}>
+                <button
+                  type="button"
+                  onClick={() => playList(episodeList, index)}
+                >
                   <img src="/play-green.svg" alt="Play episode" />
                 </button>
               </li>
@@ -97,7 +106,7 @@ export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
             </tr>
           </thead>
           <tbody>
-            {allEpisodes.map((episode) => {
+            {allEpisodes.map((episode, index) => {
               return (
                 <tr key={episode.id}>
                   <td style={{ width: 72 }}>
@@ -118,7 +127,12 @@ export default function Home({ lastestEpisodes, allEpisodes }: HomeProps) {
                   <td style={{ width: 100 }}>{episode.publishedAt}</td>
                   <td>{episode.durationAsString}</td>
                   <td>
-                    <button type="button">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        playList(episodeList, index + latestEpisodes.length)
+                      }
+                    >
                       <img src="/play-green.svg" alt="Play episode" />
                     </button>
                   </td>
@@ -179,12 +193,12 @@ export const getStaticProps: GetStaticProps = async () => {
     };
   });
 
-  const lastestEpisodes = episodes.slice(0, 2);
+  const latestEpisodes = episodes.slice(0, 2);
   const allEpisodes = episodes.slice(2, episodes.length);
 
   return {
     props: {
-      lastestEpisodes,
+      latestEpisodes,
       allEpisodes,
     },
     revalidate: 60 * 60 * 8, // 8 hours
